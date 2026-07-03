@@ -1,0 +1,24 @@
+[product]
+name = "fun"
+version = "0.0.1"
+
+[process]
+binary = "./fun"
+args = []
+
+[namespace]
+pid = true
+network = true
+mount = true
+ipc = true
+
+[permissions]
+namespace.pid = true
+namespace.network = true
+namespace.mount = false
+namespace.ipc = false
+apps.photos = true
+
+[[mount]]
+source = "/"
+target = "/"

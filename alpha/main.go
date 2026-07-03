@@ -43,23 +43,7 @@ func main() {
 	}
 
 	for {
-		for _, ac := range mon.Host {
-			select {
-				case procE := <- ac.Recv:
-					switch event := procE.(type) {
-					case monitor.ProcessExit:
-						_ = event
-						fleP, _ := monitor.CreateOrGetJournal("ls")
-
-						var buf = make([]byte, 4096)
-						fleP.Read(buf)
-
-						slog.Info(string(buf))
-					}
-				default:
-					continue
-			}
-		}
+		mon.RunCycle()
 	}
 }
 

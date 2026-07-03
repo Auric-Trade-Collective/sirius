@@ -91,3 +91,17 @@ func processMonitor(me *AlphaProcess) {
 		}
 	}
 }
+
+func (m *Monitor) RunCycle() {
+	for _, ac := range m.Host {
+		select {
+			case procE := <- ac.Recv:
+				switch event := procE.(type) {
+				case ProcessExit:
+					_ = event
+				}
+			default:
+				continue
+		}
+	}
+}
