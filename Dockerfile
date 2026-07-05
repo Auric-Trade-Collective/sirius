@@ -1,5 +1,7 @@
 FROM alpine:latest
 
+ENV BUILD_TYPE=tools
+
 RUN apk add --no-cache \
     build-base \
     bc \
@@ -13,7 +15,15 @@ RUN apk add --no-cache \
     gcc \
     make \
     perl \
-    python3
+    python3 \
+    rust \
+    go
 
-WORKDIR /kbuild/
-ENTRYPOINT ["make", "-j1", "V=1"]
+WORKDIR /apps/
+COPY ./alpha/ ./alpha/
+
+WORKDIR /build/
+COPY ./isolatedbuild.sh .
+COPY ./kernel.config ./.config
+RUN chmod +x ./isolatedbuild.sh
+ENTRYPOINT ["./isolatedbuild.sh"]
