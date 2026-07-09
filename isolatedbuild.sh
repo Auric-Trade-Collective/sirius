@@ -1,14 +1,20 @@
 #!/bin/sh
+ROOT="/mnt/sirius-root"
+
+function test {
+    adduser test
+    cp -f /etc/passwd $ROOT/etc/passwd
+}
 
 function initcorefs {
     mkdir /mnt/sirius-root/
-    ROOT="/mnt/sirius-root"
 
     mkdir -p $ROOT/etc/alpha/
     mkdir -p $ROOT/proc/
     mkdir -p $ROOT/sys/
     mkdir -p $ROOT/dev/
     mkdir -p $ROOT/var/log/alpha/
+    mkdir -p $ROOT/etc/
 
     mkdir -p $ROOT/apps/
 
@@ -22,11 +28,16 @@ cat <<EOF > $ROOT/etc/alpha/alpha.toml
 
 [host]
 # Rules for core services (compositor, init-bridge)
-ls = {
-    name = "/bin/ls",
-    args = "/"
+guarddog = {
+    name = "/bin/guarddog",
+    args = ""
 }
 EOF
+
+    echo "" > /etc/passwd
+    echo "" > /etc/shadow
+
+    test
 }
 
 function build_kernel {
@@ -55,6 +66,9 @@ function build_tools {
     echo "Building Sirius..."
     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -C /apps/alpha --ldflags="-s -w" -o /mnt/sirius-root/init .
     chmod +x /mnt/sirius-root/init
+
+    GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -C /apps/guarddog --ldflags="-s -w" -o /mnt/sirius-root/bin/guarddog .
+    chmod +x /mnt/sirius-root/bin/guarddog
 }
 
 function finalize_package {

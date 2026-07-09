@@ -21,6 +21,8 @@ RUN apk add --no-cache \
 
 WORKDIR /apps/
 COPY ./alpha/ ./alpha/
+COPY ./guarddog/ ./guarddog/
+COPY ./toybox/ ./toybox/
 
 WORKDIR /build/
 COPY ./isolatedbuild.sh .
