@@ -36,7 +36,7 @@ func WaitForDevice(name string) {
 			case error, ok := <-watcher.Errors:
 			//this entire case needs to be fixed
 				if !ok {
-					slog.Error("ERROR")
+					slog.Error("ERROR: could not wait for specified device " + name)
 				}
 
 				if error != nil {
