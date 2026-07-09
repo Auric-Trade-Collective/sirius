@@ -22,17 +22,7 @@ function initcorefs {
     mknod -m 666 $ROOT/dev/null c 1 3
     mknod -m 666 $ROOT/dev/zero c 1 5
 
-cat <<EOF > $ROOT/etc/alpha/alpha.toml
-[isolated]
-# Rules for containers (namespaces, cgroups, etc)
-
-[host]
-# Rules for core services (compositor, init-bridge)
-guarddog = {
-    name = "/bin/guarddog",
-    args = ""
-}
-EOF
+    cp /build/alpha.toml $ROOT/etc/alpha/alpha.toml
 
     echo "" > /etc/passwd
     echo "" > /etc/shadow

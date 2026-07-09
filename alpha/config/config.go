@@ -8,4 +8,6 @@ type Config struct {
 type Entry struct {
 	Name string `toml:"name"`
 	Args string `toml:"args"`
+	NeedsTTY *bool `toml:"needs_tty"`
+	NeedsDev []string `toml:"needs_dev"`
 }

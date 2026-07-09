@@ -40,7 +40,7 @@ func main() {
 	mon := monitor.NewMonitor()
 
 	for n, entry := range config.Host {
-		mon.CreateHostProcess(n, entry)
+		go mon.CreateDaemonProcess(n, entry)
 	}
 
 	for {

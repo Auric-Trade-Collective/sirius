@@ -27,5 +27,6 @@ COPY ./toybox/ ./toybox/
 WORKDIR /build/
 COPY ./isolatedbuild.sh .
 COPY ./kernel.config ./.config
+COPY ./prebuild/alpha.toml ./alpha.toml
 RUN chmod +x ./isolatedbuild.sh
 ENTRYPOINT ["./isolatedbuild.sh"]

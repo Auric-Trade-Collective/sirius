@@ -1,0 +1,11 @@
+[isolated]
+# Rules for containers (namespaces, cgroups, etc)
+
+[host]
+# Rules for core services (compositor, init-bridge)
+guarddog = {
+    name = "/bin/guarddog",
+    args = "",
+
+    needs_dev = ["/dev/console"]
+}

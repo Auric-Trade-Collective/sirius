@@ -9,44 +9,41 @@ import (
 	"github.com/YendisFish/sirius/alpha/config"
 )
 
-type AlphaProcess struct {
-	Info config.Entry
-	Cmd *exec.Cmd
-	Send chan func()
-	Recv chan ProcessEvent
-}
+type ServiceType int
+const (
+	ServiceTypeProcess ServiceType = iota
+	ServiceTypeContainer
+	ServiceTypeDaemon
+)
 
-type ProcessEvent interface {}
-
-type ProcessExit struct {
-	Code int
+type Service interface {
+	GetType() ServiceType
 }
 
 type Monitor struct {
 	mutex sync.RWMutex
-	Host map[int]*AlphaProcess
+	ByPid map[int]Service
+	ByName map[string]Service
 }
 
 func NewMonitor() *Monitor {
 	ret := &Monitor{
-		Host: make(map[int]*AlphaProcess),
+		ByPid: make(map[int]Service),
+		ByName: make(map[string]Service),
 	}
 
 	return ret
 }
 
-func (m *Monitor) CreateHostProcess(name string, entry config.Entry) {
+func (m *Monitor) CreateDaemonProcess(name string, entry config.Entry) {
+	handleDepdendencies(entry) //blocks until necessary processes and devices are hooked up
 	cmd := exec.Command(entry.Name, entry.Args)
 
-	journal, err := CreateOrGetJournal(name)
+	err := handleIO(cmd, name, entry)
 	if err != nil {
-		slog.Error("Could not create journal for: " + entry.Name)
+		slog.Error("Could not successfully start: " + name)
 		return
 	}
-
-	cmd.Stdout = journal
-	cmd.Stderr = journal
-	cmd.Stdin = nil
 
 	err = cmd.Start()
 	if err != nil {
@@ -55,53 +52,22 @@ func (m *Monitor) CreateHostProcess(name string, entry config.Entry) {
 	}
 
 	m.mutex.Lock()
-	if _, exists := m.Host[cmd.Process.Pid]; !exists {
-		alp := &AlphaProcess{
+	defer m.mutex.Unlock()
+	if _, exists := m.ByName[name]; !exists {
+		alp := AlphaDaemon{
 			Info: entry,
 			Cmd: cmd,
 			Send: make(chan func()),
 			Recv: make(chan ProcessEvent),
+			Name: name,
 		}
 
-		m.Host[cmd.Process.Pid] = alp
+		m.ByPid[cmd.Process.Pid] = alp
+		m.ByName[name] = alp
 
-		go processMonitor(alp)
+		go daemonMonitor(alp)
 	} else {
-		slog.Info("Ambiguous PID found: " + strconv.Itoa(cmd.Process.Pid))
+		slog.Info("Ambiguous Name found: " + strconv.Itoa(cmd.Process.Pid))
 		return
-	}
-}
-
-func processMonitor(me *AlphaProcess) {
-	exit := make(chan error, 1)
-	go func() {
-		exit <- me.Cmd.Wait()
-	}()
-
-	for {
-		select {
-			case action := <- me.Send:
-				action()
-			case <- exit:
-				me.Recv <- ProcessExit{
-					Code: me.Cmd.ProcessState.ExitCode(),
-				}
-			default:
-				continue
-		}
-	}
-}
-
-func (m *Monitor) RunCycle() {
-	for _, ac := range m.Host {
-		select {
-			case procE := <- ac.Recv:
-				switch event := procE.(type) {
-				case ProcessExit:
-					_ = event
-				}
-			default:
-				continue
-		}
 	}
 }
