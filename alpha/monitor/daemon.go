@@ -7,11 +7,11 @@ import (
 )
 
 type AlphaDaemon struct {
-	Info config.Entry
+	Info *config.Entry
 	Cmd *exec.Cmd
 	Send chan func()
 	Recv chan ProcessEvent
 	Name string
 }
 
-func (a AlphaDaemon) GetType() ServiceType { return ServiceTypeProcess }
+func (a AlphaDaemon) GetType() ServiceType { return ServiceTypeDaemon }

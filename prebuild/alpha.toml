@@ -7,5 +7,6 @@ guarddog = {
     name = "/bin/guarddog",
     args = "",
 
-    needs_dev = ["/dev/console"]
+    needs_dev = ["/dev/console"],
+    on_exit = "restart"
 }

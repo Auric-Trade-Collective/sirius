@@ -22,6 +22,7 @@ type Service interface {
 
 type Monitor struct {
 	mutex sync.RWMutex
+	Config config.Config
 	ByPid map[int]Service
 	ByName map[string]Service
 }
@@ -35,11 +36,17 @@ func NewMonitor() *Monitor {
 	return ret
 }
 
-func (m *Monitor) CreateDaemonProcess(name string, entry config.Entry) {
-	handleDepdendencies(entry) //blocks until necessary processes and devices are hooked up
+func (m *Monitor) CreateDaemonProcess(name string, entry *config.Entry) {
+	m.mutex.Lock()
+
+	err := m.handleDepdendencies(entry) //blocks until necessary processes and devices are hooked up
+	if err != nil {
+		slog.Error("Could not successfully start: " + name + " Reason: Couldn't initialize dependencies")
+	}
+
 	cmd := exec.Command(entry.Name, entry.Args)
 
-	err := handleIO(cmd, name, entry)
+	err = handleIO(cmd, name, entry)
 	if err != nil {
 		slog.Error("Could not successfully start: " + name)
 		return
@@ -51,9 +58,7 @@ func (m *Monitor) CreateDaemonProcess(name string, entry config.Entry) {
 		return
 	}
 
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	if _, exists := m.ByName[name]; !exists {
+	if !m.isDaemonRunning(name) {
 		alp := AlphaDaemon{
 			Info: entry,
 			Cmd: cmd,
@@ -68,6 +73,12 @@ func (m *Monitor) CreateDaemonProcess(name string, entry config.Entry) {
 		go daemonMonitor(alp)
 	} else {
 		slog.Info("Ambiguous Name found: " + strconv.Itoa(cmd.Process.Pid))
-		return
 	}
+
+	m.mutex.Unlock()
+}
+
+func (m *Monitor) isDaemonRunning(name string) bool {
+	_, exists := m.ByName[name]
+	return exists
 }

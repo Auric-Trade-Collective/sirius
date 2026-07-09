@@ -38,6 +38,7 @@ func main() {
 	slog.Info("Starting system...")
 
 	mon := monitor.NewMonitor()
+	mon.Config = config
 
 	for n, entry := range config.Host {
 		go mon.CreateDaemonProcess(n, entry)
