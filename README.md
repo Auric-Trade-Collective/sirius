@@ -1,6 +1,6 @@
 # Sirius
 Sirius is an open source layer over the Linux kernel
-which runs containerized applicaitons and delivers drivers
+which runs containerized applications and delivers drivers
 to userspace. Using modern languages such as Go, Flux, and
 Rust, Sirius abandons old standards of C and aims for a 
 bright future!

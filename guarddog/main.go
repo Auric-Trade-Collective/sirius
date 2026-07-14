@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"syscall"
 
 	toybox_reader "github.com/YendisFish/sirius/guarddog/reader"
 	toybox_types "github.com/YendisFish/sirius/toybox/types"
@@ -28,8 +29,8 @@ func main() {
 func login(username string, password string) {
 	usrs, err := toybox_types.ReadPasswd()
 	if err != nil {
-		slog.Error("Couldn't read password!")
-		panic("Password failure")
+		slog.Error("Couldn't read password! Reason: " + err.Error())
+		os.Exit(1)
 	}
 
 	for _, usr := range usrs {
@@ -41,6 +42,21 @@ func login(username string, password string) {
 
 			//we get a shell now!
 			fmt.Println("Success, starting shell!")
+			transfer(usr)
 		}
 	}
+}
+
+func transfer(user toybox_types.PasswdUser) {
+	//eventually groups will need to be set as well
+
+	if err := syscall.Setresgid(user.GID, user.GID, user.GID); err != nil {
+		panic("Couldn't transfer program ownership to user")
+	}
+
+	if err := syscall.Setresuid(user.UID, user.UID, user.UID); err != nil {
+		panic("Couldn't transfer program ownership to user")
+	}
+
+	syscall.Exec(user.Shell, []string{user.Shell}, os.Environ())
 }

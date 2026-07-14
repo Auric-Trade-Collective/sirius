@@ -54,6 +54,8 @@ func (m *Monitor) CreateDaemonProcess(name string, entry *config.Entry) {
 		return
 	}
 
+	cmd.Dir = "/"
+
 	err = cmd.Start()
 	if err != nil {
 		slog.Error("Couldn't start process: " + entry.Name + " Reason: " + err.Error())

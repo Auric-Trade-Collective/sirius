@@ -19,6 +19,7 @@ RUN apk add --no-cache \
     perl \
     python3 \
     rust \
+    cargo \
     go \
     qemu-img \
     qemu-aarch64 \
@@ -40,13 +41,17 @@ RUN apk add --no-cache \
     libeconf-static \
     openssl-libs-static \
     elfutils-dev \
-    qemu-system-aarch64
+    qemu-system-aarch64 \
+    curl
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 WORKDIR /apps/
 COPY ./alpha/ ./alpha/
 COPY ./guarddog/ ./guarddog/
 COPY ./toybox/ ./toybox/
 COPY ./zfsbootstrap/ ./zfsbootstrap/
+COPY ./leash/ ./leash/
 
 WORKDIR /build/
 COPY ./isolatedbuild.sh .

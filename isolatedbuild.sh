@@ -3,19 +3,16 @@ ROOT="/mnt/sirius-root"
 FS="/mnt/sirius-fs"
 ZBUILD="/mnt/zbuild"
 
+source "$HOME/.cargo/env"
+
 function env_diagnostics {
-    echo "Running environment diagnostics!"
-
-    file $ZBUILD/zfs/zpool/.libs/zpool
-    file $ZBUILD/mnt/zbuild/zfs/zfs/.libs/zfs
-
-    readelf -l $ZBUILD/zfs/.libs/zpool | grep -i interpreter
-    ldd $ZBUILD/zfs/.libs/zpool
+    echo "Running environment diagnostics"
+    ldd $FS/bin/coreutils
 }
 
 function test {
-    adduser test
-    cp -f /etc/passwd $ROOT/etc/passwd
+    echo "test:x:1000:1000::/home/test:/bin/leash" > $FS/etc/passwd
+    echo "/bin/" > $FS/etc/paths
 }
 
 function initramfs {
@@ -47,7 +44,6 @@ function initcorefs {
     echo "" > /etc/passwd
     echo "" > /etc/shadow
 
-    test
 }
 
 function build_zfs {
@@ -113,6 +109,23 @@ function build_tools {
 
     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -C /apps/guarddog --ldflags="-s -w" -o $FS/bin/guarddog .
     chmod +x $FS/bin/guarddog
+
+    GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -C /apps/leash --ldflags="-s -w" -o $FS/bin/leash .
+    chmod +x $FS/bin/leash
+
+    git clone https://github.com/uutils/coreutils
+    cd coreutils
+    cargo build --release \
+                --features "rm cat ls cp mv"
+    cp ./target/release/coreutils $FS/bin/
+
+    echo "Symlinking coreutils..."
+    cd $FS/bin/
+    ln -s coreutils ls
+    ln -s coreutils cp
+    ln -s coreutils mv
+    ln -s coreutils cat
+    ln -s coreutils rm
 }
 
 function build_qcow {
@@ -185,5 +198,6 @@ fi
 initramfs
 initcorefs
 build_tools
+test
 finalize_package
 env_diagnostics
