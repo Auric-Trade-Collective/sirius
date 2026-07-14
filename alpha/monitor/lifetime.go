@@ -41,10 +41,16 @@ func (m *Monitor) handleDaemonEvent(service AlphaDaemon) {
 }
 
 func daemonMonitor(me AlphaDaemon) {
-	me.Cmd.Wait()
+	err := me.Cmd.Wait()
 
-	me.Recv <- ProcessExit{
-		Code: me.Cmd.ProcessState.ExitCode(),
+	if err != nil {
+		me.Recv <- ProcessCrash{
+			Code: me.Cmd.ProcessState.ExitCode(),
+		}
+	} else {
+		me.Recv <- ProcessExit{
+			Code: me.Cmd.ProcessState.ExitCode(),
+		}
 	}
 }
 

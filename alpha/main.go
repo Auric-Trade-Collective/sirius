@@ -1,4 +1,5 @@
 //go:build linux
+
 package main
 
 import (
@@ -6,16 +7,21 @@ import (
 	"os"
 
 	"github.com/YendisFish/sirius/alpha/config"
+	"github.com/YendisFish/sirius/alpha/kernel"
 	"github.com/YendisFish/sirius/alpha/monitor"
 	"github.com/pelletier/go-toml/v2"
-	"golang.org/x/sys/unix"
 )
 
 func main() {
 	slog.Info("Initializing alpha")
 
-	err := mountFs()
-	if err != nil {
+	if err := kernel.MountFs(); err != nil {
+		slog.Info("Could not initialize ramfs")
+		return
+	}
+
+	if err := kernel.MountZFS(); err != nil {
+		slog.Info("Could not initialize zfs")
 		return
 	}
 
@@ -47,24 +53,4 @@ func main() {
 	for {
 		mon.RunCycle()
 	}
-}
-
-func mountFs() error {
-	err := unix.Mount("none", "/dev", "devtmpfs", unix.MS_NOSUID, "")
-	if err != nil {
-		slog.Error("Could not mount filesystem...")
-		return err
-	}
-
-	err = unix.Mount("proc", "/proc", "proc", 0, "")
-    if err != nil {
-        return err
-    }
-
-    err = unix.Mount("sysfs", "/sys", "sysfs", 0, "")
-    if err != nil {
-        return err
-    }
-
-	return nil
 }

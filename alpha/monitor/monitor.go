@@ -38,10 +38,12 @@ func NewMonitor() *Monitor {
 
 func (m *Monitor) CreateDaemonProcess(name string, entry *config.Entry) {
 	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
 	err := m.handleDepdendencies(entry) //blocks until necessary processes and devices are hooked up
 	if err != nil {
 		slog.Error("Could not successfully start: " + name + " Reason: Couldn't initialize dependencies")
+		return
 	}
 
 	cmd := exec.Command(entry.Name, entry.Args)
@@ -74,8 +76,6 @@ func (m *Monitor) CreateDaemonProcess(name string, entry *config.Entry) {
 	} else {
 		slog.Info("Ambiguous Name found: " + strconv.Itoa(cmd.Process.Pid))
 	}
-
-	m.mutex.Unlock()
 }
 
 func (m *Monitor) isDaemonRunning(name string) bool {

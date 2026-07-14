@@ -40,7 +40,7 @@ func WaitForDevice(name string) {
 				}
 
 				if error != nil {
-					slog.Error("ERROR: " + error.Error())
+					slog.Error("ERROR fsnotify failed: " + error.Error())
 				}
 		}
 	}

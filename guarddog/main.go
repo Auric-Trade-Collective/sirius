@@ -8,8 +8,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/YendisFish/sirius/guarddog/reader"
-	"github.com/YendisFish/sirius/toybox/types"
+	toybox_reader "github.com/YendisFish/sirius/guarddog/reader"
+	toybox_types "github.com/YendisFish/sirius/toybox/types"
 )
 
 func main() {
@@ -21,12 +21,12 @@ func main() {
 		slog.Error("Could not read standard input, Reason: " + err.Error())
 	}
 
-	passwd := reader.ReadPassword("password: ")
+	passwd := toybox_reader.ReadPassword("password: ")
 	login(string(uname), passwd)
 }
 
 func login(username string, password string) {
-	usrs, err := types.ReadPasswd()
+	usrs, err := toybox_types.ReadPasswd()
 	if err != nil {
 		slog.Error("Couldn't read password!")
 		panic("Password failure")
